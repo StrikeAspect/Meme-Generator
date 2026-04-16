@@ -1,25 +1,27 @@
-import { ImgFlipApi } from './api.js';
+import { memeApi } from './api.js';
 
 (async () => {
 
-	const imgFlipApi = new ImgFlipApi();
-	await imgFlipApi.init();
+	await memeApi.init();
 
 	const gallery = document.querySelector('#gallery');
+	const memes = memeApi.memeList;
 
-	if (imgFlipApi.memeList.length > 0) {
+	if (memes.length > 0) {
 
 		let html = '';
 
-		imgFlipApi.memeList.forEach(meme => {
-			const {id, name, url} = meme;
-			const imageName = imgFlipApi.getMemeNameFromUrl(url);
+		memes.forEach(meme => {
+			const { id, name, title, url } = meme;
+			const displayName = name || title || 'Meme';
+			const imageName = memeApi.getMemeNameFromUrl(url);
+			const encodedUrl = encodeURIComponent(url);
 
 			const galleryItem = `
 			<li class="gallery-item skeleton" data-src="${url}" data-imageName="${imageName}">
 				<div>
-					<p>${name}</p>
-					<a href="crea.html?imageName=${imageName}">Usa template</a>
+					<p>${displayName}</p>
+					<a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(imageName)}">Usa template</a>
 				</div>
 			</li>
 			`;
@@ -43,6 +45,13 @@ import { ImgFlipApi } from './api.js';
 						item.classList.remove('skeleton');
 						item.insertBefore(img, item.firstChild);
 					};
+					img.onerror = () => {
+						if (img.src !== 'assets/placeholder.svg') {
+							img.src = 'assets/placeholder.svg';
+						}
+						item.classList.remove('skeleton');
+						item.insertBefore(img, item.firstChild);
+					};
 					observer.unobserve(item);
 				}
 			})
@@ -50,7 +59,8 @@ import { ImgFlipApi } from './api.js';
 
 		lazyLoadItems.forEach(item => observer.observe(item));
 
-
+	} else {
+		gallery.innerHTML = '<li class="gallery-empty">Non è stato possibile caricare i meme. Riprova più tardi.</li>';
 	}
 
 })();

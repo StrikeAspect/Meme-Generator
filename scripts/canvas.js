@@ -1,16 +1,21 @@
 class MemeEditor {
-  constructor(canvasSelector, imageToLoad) {
+  constructor(canvasSelector, imageUrl) {
     this.canvas = document.querySelector(canvasSelector);
     this.ctx = this.canvas.getContext("2d");
 
     this.controls = document.querySelector(".controls");
     this.saveButton = document.querySelector(".save-button");
-		this.recentMeme = document.querySelector(".recent-memes");
+    this.recentMeme = document.querySelector(".recent-memes");
 
     this.image = new Image();
     this.image.crossOrigin = "anonymous";
-    this.image.src = `https://i.imgflip.com/${imageToLoad}`;
+    this.image.src = imageUrl || "assets/placeholder.svg";
     this.image.onload = this.setupCanvasAndRedraw.bind(this);
+    this.image.onerror = () => {
+      if (this.image.src !== "assets/placeholder.svg") {
+        this.image.src = "assets/placeholder.svg";
+      }
+    };
 
     this.topText = "";
     this.bottomText = "";
@@ -25,7 +30,7 @@ class MemeEditor {
     this.dragOffset = { x: 0, y: 0 };
 
     this.attachEventsListeners();
-		this.showRecentMemes();
+    this.showRecentMemes();
   }
 
   setupCanvasAndRedraw() {
@@ -100,7 +105,8 @@ class MemeEditor {
       const textLeft = x - textWidth / 2 - textMargin;
       const textRight = x + textWidth / 2 + textMargin;
 
-      let textTop, textBottom;
+      let textTop;
+      let textBottom;
       if (position === "top") {
         textTop = y - this.currentTextSize - textMargin;
         textBottom = y + textMargin;
@@ -126,81 +132,70 @@ class MemeEditor {
     }
   }
 
-	handleMouseMove(event) {
-		if (!this.isDragging) return;
+  handleMouseMove(event) {
+    if (!this.isDragging) return;
 
-		const rect = this.canvas.getBoundingClientRect();
+    const rect = this.canvas.getBoundingClientRect();
 
-		const scaleX = this.canvas.width / rect.width;
-		const scaleY = this.canvas.height / rect.height;
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
 
-		const mouseX = (event.clientX - rect.left) * scaleX;
-		const mouseY = (event.clientY - rect.top) * scaleY;
+    const mouseX = (event.clientX - rect.left) * scaleX;
+    const mouseY = (event.clientY - rect.top) * scaleY;
 
-		this.textState[this.draggedText].x = mouseX - this.dragOffset.x;
-		this.textState[this.draggedText].y = mouseY - this.dragOffset.y;
+    this.textState[this.draggedText].x = mouseX - this.dragOffset.x;
+    this.textState[this.draggedText].y = mouseY - this.dragOffset.y;
 
-		this.redraw();
-	}
+    this.redraw();
+  }
 
-	handleMouseUp() {
-		this.isDragging = false;
-		this.draggedText = null;
-	}
+  handleMouseUp() {
+    this.isDragging = false;
+    this.draggedText = null;
+  }
 
-	handleSave() {
-		const link = document.createElement("a");
-		link.download = "meme.png";
-		link.href = this.canvas.toDataURL();
-		link.click();
-		this.saveToLocalStorage();
-	}
+  handleSave() {
+    const link = document.createElement("a");
+    link.download = "meme.png";
+    link.href = this.canvas.toDataURL();
+    link.click();
+    this.saveToLocalStorage();
+  }
 
-	saveToLocalStorage() {
-		const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
+  saveToLocalStorage() {
+    const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
 
-		recentMemes.push(this.canvas.toDataURL());
-		localStorage.setItem("recentMemes", JSON.stringify(recentMemes));
-		this.showRecentMemes();
-	}
+    recentMemes.push(this.canvas.toDataURL());
+    localStorage.setItem("recentMemes", JSON.stringify(recentMemes));
+    this.showRecentMemes();
+  }
 
-	showRecentMemes() {
-		const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
-		let html = "";
+  showRecentMemes() {
+    const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
+    let html = "";
 
-		recentMemes.forEach((meme, index) => {
-			const galleryItem = `
-			<li class="gallery-item">
-			<img src="${meme}" alt="Meme recente numero ${index + 1}" />
-			<a href="${meme}" download="recent-meme-${index + 1}.png">Scarica</a>
-			</li>
-			`;
-			html += galleryItem
-		})
+    recentMemes.forEach((meme, index) => {
+      const galleryItem = `
+      <li class="gallery-item">
+        <img src="${meme}" alt="Meme recente numero ${index + 1}" />
+        <a href="${meme}" download="recent-meme-${index + 1}.png">Scarica</a>
+      </li>
+      `;
+      html += galleryItem;
+    });
 
-		this.recentMeme.innerHTML = html;
-
-	}
+    this.recentMeme.innerHTML = html;
+  }
 
   attachEventsListeners() {
-    this.canvas.addEventListener(
-      "pointerdown",
-      this.handleMouseDown.bind(this)
-    );
-    this.canvas.addEventListener(
-      "pointermove",
-      this.handleMouseMove.bind(this)
-    );
-		window.addEventListener("pointerup", this.handleMouseUp.bind(this));
-    this.controls.addEventListener(
-      "input",
-      this.handleControlsChange.bind(this)
-    );
-		this.saveButton.addEventListener("click", this.handleSave.bind(this));
+    this.canvas.addEventListener("pointerdown", this.handleMouseDown.bind(this));
+    this.canvas.addEventListener("pointermove", this.handleMouseMove.bind(this));
+    window.addEventListener("pointerup", this.handleMouseUp.bind(this));
+    this.controls.addEventListener("input", this.handleControlsChange.bind(this));
+    this.saveButton.addEventListener("click", this.handleSave.bind(this));
   }
 }
 
-const memeEditor = new MemeEditor(
-  ".editor-canvas",
-  window.location.search.split("=")[1]
-);
+const params = new URLSearchParams(window.location.search);
+const imageUrl = params.get("imageUrl") ? decodeURIComponent(params.get("imageUrl")) : "assets/placeholder.svg";
+const memeEditor = new MemeEditor(".editor-canvas", imageUrl);
