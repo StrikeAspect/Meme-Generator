@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Meme Generator RF</title>
+		<link rel="stylesheet" href="css/main.css">
+		<link rel="stylesheet" href="css/crea.css">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+		<script src="scripts/canvas.js" type="module"></script>
+	</head>
+<body>
+	<header class="content">
+		<p class="logo">
+			<a href="index.html"><span>MG</span>RF</a>
+		</p>
+		<nav>
+			<ul>
+				<li><a href="#gallery" class="btn">Crea Meme</a></li>
+			</ul>
+		</nav>
+	</header>
+	<main>
+		<section class="meme-editor content">
+			<canvas class="editor-canvas"></canvas>
+			<div class="controls">
+				<div>
+					<div class="control-group">
+						<label for="text-top">Testo in alto</label>
+						<textarea name="text-top" id="text-top" class="text-top" placeholder="Inserisci il testo in alto"></textarea>
+					</div>
+					<div class="control-group">
+						<label for="text-bottom">Testo in basso</label>
+						<textarea name="text-bottom" id="text-bottom" class="text-bottom" placeholder="Inserisci il testo in basso"></textarea>
+					</div>
+					<div class="control-group">
+						<label for="text-size">Dimensione testo</label>
+						<input type="range" name="text-size" id="text-size" min="0" max="100" value="20" class="text-size">
+					</div>
+					<button class="btn btn--small save-button">Scarica Meme</button>
+				</div>
+			</div>
+		</section>
+		<section>
+			<ul class="recent-memes" id="gallery"></ul>
+		</section>
+	</main>
+	<footer>
+		<p>Sito creato da Rams</p>
+	</footer>
+</body>
+</html>
