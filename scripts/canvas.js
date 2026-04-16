@@ -197,5 +197,5 @@ class MemeEditor {
 }
 
 const params = new URLSearchParams(window.location.search);
-const imageUrl = params.get("imageUrl") ? decodeURIComponent(params.get("imageUrl")) : "assets/placeholder.svg";
+const imageUrl = params.get("imageUrl") || "assets/placeholder.svg";
 const memeEditor = new MemeEditor(".editor-canvas", imageUrl);
