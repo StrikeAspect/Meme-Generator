@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <img src="image.png" alt="Meme Generator RF" width="80" height="80">
+  <img src="assets/mgrf.png" alt="Meme Generator RF" width="80" height="80">
   <h1 align="center">Meme Generator RF</h1>
   <p align="center">
     A playful meme creation tool made with vanilla web tech. Grab a template, drop in text, export your viral-ready meme.
