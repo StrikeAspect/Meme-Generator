@@ -12,6 +12,9 @@
     <a href="#project-structure">Structure</a> ·
     <a href="#usage">Usage</a>
   </p>
+  <p align="center">
+    <a href="https://strikeaspect.github.io/Meme-Generator/" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background-color: #2342cc; color: white; border-radius: 5px; text-decoration: none; font-weight: bold;">Live Preview</a>
+  </p>
 </div>
 
 ## Built With
