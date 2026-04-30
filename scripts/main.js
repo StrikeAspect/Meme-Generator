@@ -1,5 +1,16 @@
 import { memeApi } from './api.js';
 
+// 🛡️ Sentinel: Escape HTML to prevent XSS vulnerabilities
+function escapeHTML(str) {
+	if (str == null) return '';
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 (async () => {
 
 	await memeApi.init();
@@ -13,15 +24,20 @@ import { memeApi } from './api.js';
 
 		memes.forEach(meme => {
 			const { id, name, title, url } = meme;
-			const displayName = name || title || 'Meme';
-			const imageName = memeApi.getMemeNameFromUrl(url);
+			// 🛡️ Sentinel: Sanitize API output before using it in HTML
+			const displayName = escapeHTML(name || title || 'Meme');
+
+			const rawImageName = memeApi.getMemeNameFromUrl(url);
+			const imageName = escapeHTML(rawImageName);
+
+			const safeUrl = escapeHTML(url);
 			const encodedUrl = encodeURIComponent(url);
 
 			const galleryItem = `
-			<li class="gallery-item skeleton" data-src="${url}" data-imageName="${imageName}">
+			<li class="gallery-item skeleton" data-src="${safeUrl}" data-imageName="${imageName}">
 				<div>
 					<p>${displayName}</p>
-					<a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(imageName)}">Usa template</a>
+					<a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(rawImageName)}">Usa template</a>
 				</div>
 			</li>
 			`;
