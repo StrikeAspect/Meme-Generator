@@ -174,11 +174,21 @@ class MemeEditor {
     const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
     let html = "";
 
+    const escapeHTML = (str) => {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
     recentMemes.forEach((meme, index) => {
+      const safeMeme = escapeHTML(meme);
       const galleryItem = `
       <li class="gallery-item">
-        <img src="${meme}" alt="Meme recente numero ${index + 1}" />
-        <a href="${meme}" download="recent-meme-${index + 1}.png">Scarica</a>
+        <img src="${safeMeme}" alt="Meme recente numero ${index + 1}" />
+        <a href="${safeMeme}" download="recent-meme-${index + 1}.png">Scarica</a>
       </li>
       `;
       html += galleryItem;
