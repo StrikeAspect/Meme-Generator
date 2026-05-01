@@ -59,7 +59,7 @@ import { memeApi } from './api.js';
 						item.insertBefore(img, item.firstChild);
 					};
 					img.onerror = () => {
-						if (img.src !== 'assets/placeholder.svg') {
+						if (!img.src.includes('assets/placeholder.svg')) {
 							img.src = 'assets/placeholder.svg';
 						}
 						item.classList.remove('skeleton');
