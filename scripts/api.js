@@ -9,8 +9,6 @@ export class MemeApi {
 		{ id: 'local-5', name: 'Meme Placeholder 5', url: 'assets/placeholder.svg' },
 	];
 
-	constructor() {}
-
 	async init() {
 		await this.loadMemes();
 	}
