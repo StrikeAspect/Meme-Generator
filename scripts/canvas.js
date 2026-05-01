@@ -196,6 +196,10 @@ class MemeEditor {
   }
 }
 
-const params = new URLSearchParams(window.location.search);
-const imageUrl = params.get("imageUrl") || "assets/placeholder.svg";
-const memeEditor = new MemeEditor(".editor-canvas", imageUrl);
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { MemeEditor };
+} else {
+  const params = new URLSearchParams(window.location.search);
+  const imageUrl = params.get("imageUrl") || "assets/placeholder.svg";
+  window.memeEditor = new MemeEditor(".editor-canvas", imageUrl);
+}

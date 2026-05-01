@@ -1,0 +1,9 @@
+{
+  "name": "meme-generator-rf",
+  "version": "1.0.0",
+  "description": "A playful meme creation tool made with vanilla web tech.",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {}
+}
