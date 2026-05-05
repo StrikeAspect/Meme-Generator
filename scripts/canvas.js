@@ -10,7 +10,6 @@ class MemeEditor {
       this.controlsContainer.innerHTML = renderEditorControls();
     }
 
-    this.saveButton = document.querySelector(".save-button");
     this.saveProjectButton = document.querySelector(".save-project-button");
     this.importProjectButton = document.querySelector(".import-project-button");
     this.importProjectInput = document.querySelector("#import-project-input");
@@ -197,15 +196,29 @@ class MemeEditor {
   }
 
   handleSave() {
+    console.log("Meme Generator: Download requested...");
     try {
+      const dataUrl = this.canvas.toDataURL("image/jpeg", 0.9);
       const link = document.createElement("a");
-      link.download = "meme.jpg";
-      link.href = this.canvas.toDataURL("image/jpeg", 0.8);
+      link.download = `meme-${Date.now()}.jpg`;
+      link.href = dataUrl;
+      
+      // Mandatory for some browsers to trigger click
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
       this.saveToLocalStorage();
+      console.log("Meme Generator: Download triggered.");
     } catch (err) {
       console.error("Meme Generator: Download failed due to security restrictions.", err);
-      alert("Security restriction: This specific image cannot be downloaded directly. Try using 'Save Project' instead.");
+      alert(
+        "Notice: This specific image (from Reddit/external host) prevents direct downloads for security reasons.\n\n" +
+        "To save your meme:\n" +
+        "1. Right-click the image on the left and 'Save Image As'\n" +
+        "2. Or take a screenshot of your creation!\n\n" +
+        "You can still use 'Save Project' to export your text settings."
+      );
     }
   }
 
@@ -245,7 +258,9 @@ class MemeEditor {
     const link = document.createElement("a");
     link.download = "meme-project.json";
     link.href = url;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
 
@@ -272,11 +287,18 @@ class MemeEditor {
   saveToLocalStorage() {
     try {
       const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
-      recentMemes.push(this.canvas.toDataURL("image/jpeg", 0.8));
+      const dataUrl = this.canvas.toDataURL("image/jpeg", 0.5); // Lower quality for history to save space
+      recentMemes.unshift(dataUrl); // Add to beginning
+      
+      // Limit to 10 recent memes
+      if (recentMemes.length > 10) {
+        recentMemes.pop();
+      }
+      
       localStorage.setItem("recentMemes", JSON.stringify(recentMemes));
       this.showRecentMemes();
     } catch (e) {
-      console.warn("Meme Generator: Could not save to local history due to security.");
+      console.warn("Meme Generator: Could not save to local history (Security or Storage full).");
     }
   }
 
@@ -296,9 +318,6 @@ class MemeEditor {
     window.addEventListener("pointerup", this.handleMouseUp.bind(this));
     if (this.controlsContainer) {
       this.controlsContainer.addEventListener("input", this.handleControlsChange.bind(this));
-    }
-    if (this.saveButton) {
-      this.saveButton.addEventListener("click", this.handleSave.bind(this));
     }
     if (this.saveProjectButton) {
       this.saveProjectButton.addEventListener("click", this.handleSaveProject.bind(this));

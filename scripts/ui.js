@@ -35,7 +35,9 @@ export function renderGalleryItem(meme, getMemeNameFromUrl) {
         <li class="gallery-item skeleton" data-src="${safeUrl}" data-imageName="${imageName}">
             <div>
                 <p>${displayName}</p>
-                <a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(rawImageName)}">Use template</a>
+                <div class="button-group">
+                    <a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(rawImageName)}" class="btn btn--small">Use template</a>
+                </div>
             </div>
         </li>
     `;
@@ -52,7 +54,6 @@ export function renderRecentMeme(memeDataUrl, index) {
     return `
         <li class="gallery-item">
             <img src="${safeMeme}" alt="Recent meme number ${index + 1}" />
-            <a href="${safeMeme}" download="recent-meme-${index + 1}.png">Download</a>
         </li>
     `;
 }
@@ -77,11 +78,13 @@ export function renderEditorControls() {
                 <input type="range" name="text-size" id="text-size" min="0" max="100" value="50" class="text-size">
             </div>
             <div class="button-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn btn--small save-button">Download Meme</button>
                 <button class="btn btn--small save-project-button">Save Project</button>
                 <button class="btn btn--small import-project-button">Import Project</button>
                 <input type="file" id="import-project-input" style="display: none;" accept=".json">
             </div>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 15px; font-style: italic;">
+                Tip: Right-click the image and select "Save Image As" or take a screenshot to save your meme!
+            </p>
         </div>
     `;
 }
