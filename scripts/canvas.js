@@ -12,7 +12,7 @@ class MemeEditor {
     this.image.src = imageUrl || "assets/placeholder.svg";
     this.image.onload = this.setupCanvasAndRedraw.bind(this);
     this.image.onerror = () => {
-      if (this.image.src !== "assets/placeholder.svg") {
+      if (!this.image.src.includes("assets/placeholder.svg")) {
         this.image.src = "assets/placeholder.svg";
       }
     };
@@ -34,8 +34,18 @@ class MemeEditor {
   }
 
   setupCanvasAndRedraw() {
-    this.canvas.width = this.image.width;
-    this.canvas.height = this.image.height;
+    const maxWidth = 800;
+    let width = this.image.width;
+    let height = this.image.height;
+
+    if (width > maxWidth) {
+      const ratio = maxWidth / width;
+      width = maxWidth;
+      height = height * ratio;
+    }
+
+    this.canvas.width = width;
+    this.canvas.height = height;
 
     this.textState.bottom.y = this.canvas.height - 50;
     this.textState.bottom.x = this.canvas.width / 2;
@@ -47,7 +57,9 @@ class MemeEditor {
 
   redraw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(this.image, 0, 0);
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
     this.applyText(this.textState.top);
     this.applyText(this.textState.bottom);
   }
@@ -156,8 +168,8 @@ class MemeEditor {
 
   handleSave() {
     const link = document.createElement("a");
-    link.download = "meme.png";
-    link.href = this.canvas.toDataURL();
+    link.download = "meme.jpg";
+    link.href = this.canvas.toDataURL("image/jpeg", 0.8);
     link.click();
     this.saveToLocalStorage();
   }
@@ -165,7 +177,7 @@ class MemeEditor {
   saveToLocalStorage() {
     const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
 
-    recentMemes.push(this.canvas.toDataURL());
+    recentMemes.push(this.canvas.toDataURL("image/jpeg", 0.8));
     localStorage.setItem("recentMemes", JSON.stringify(recentMemes));
     this.showRecentMemes();
   }
@@ -174,11 +186,21 @@ class MemeEditor {
     const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
     let html = "";
 
+    const escapeHTML = (str) => {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
     recentMemes.forEach((meme, index) => {
+      const safeMeme = escapeHTML(meme);
       const galleryItem = `
       <li class="gallery-item">
-        <img src="${meme}" alt="Meme recente numero ${index + 1}" />
-        <a href="${meme}" download="recent-meme-${index + 1}.png">Scarica</a>
+        <img src="${safeMeme}" alt="Meme recente numero ${index + 1}" />
+        <a href="${safeMeme}" download="recent-meme-${index + 1}.png">Scarica</a>
       </li>
       `;
       html += galleryItem;
@@ -196,6 +218,10 @@ class MemeEditor {
   }
 }
 
-const params = new URLSearchParams(window.location.search);
-const imageUrl = params.get("imageUrl") || "assets/placeholder.svg";
-const memeEditor = new MemeEditor(".editor-canvas", imageUrl);
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { MemeEditor };
+} else {
+  const params = new URLSearchParams(window.location.search);
+  const imageUrl = params.get("imageUrl") || "assets/placeholder.svg";
+  window.memeEditor = new MemeEditor(".editor-canvas", imageUrl);
+}

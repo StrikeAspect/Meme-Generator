@@ -22,17 +22,25 @@ function escapeHTML(str) {
 
 		let html = '';
 
+		const escapeHTML = (str) => {
+			return String(str)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
+		};
+
 		memes.forEach(meme => {
 			const { id, name, title, url } = meme;
-			// 🛡️ Sentinel: Sanitize API output before using it in HTML
 			const displayName = escapeHTML(name || title || 'Meme');
 
 			const rawImageName = memeApi.getMemeNameFromUrl(url);
 			const imageName = escapeHTML(rawImageName);
 
-			const safeUrl = escapeHTML(url);
-			const encodedUrl = encodeURIComponent(url);
 
+			const encodedUrl = encodeURIComponent(url);
+			const safeUrl = escapeHTML(url);
 			const galleryItem = `
 			<li class="gallery-item skeleton" data-src="${safeUrl}" data-imageName="${imageName}">
 				<div>
@@ -62,7 +70,7 @@ function escapeHTML(str) {
 						item.insertBefore(img, item.firstChild);
 					};
 					img.onerror = () => {
-						if (img.src !== 'assets/placeholder.svg') {
+						if (!img.src.includes('assets/placeholder.svg')) {
 							img.src = 'assets/placeholder.svg';
 						}
 						item.classList.remove('skeleton');
