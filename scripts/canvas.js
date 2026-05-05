@@ -1,24 +1,42 @@
+import { renderRecentMeme, renderEditorControls } from './ui.js';
+
 class MemeEditor {
   constructor(canvasSelector, imageUrl) {
     this.canvas = document.querySelector(canvasSelector);
     this.ctx = this.canvas.getContext("2d");
 
-    this.controls = document.querySelector(".controls");
+    this.controlsContainer = document.querySelector(".controls");
+    if (this.controlsContainer) {
+      this.controlsContainer.innerHTML = renderEditorControls();
+    }
+
     this.saveButton = document.querySelector(".save-button");
+    this.saveProjectButton = document.querySelector(".save-project-button");
+    this.importProjectButton = document.querySelector(".import-project-button");
+    this.importProjectInput = document.querySelector("#import-project-input");
     this.recentMeme = document.querySelector(".recent-memes");
 
+    this.imageUrl = imageUrl || "assets/placeholder.svg";
+    
+    // Ensure https for external images to avoid Mixed Content on GitHub Pages
+    if (this.imageUrl.startsWith("http://")) {
+      this.imageUrl = this.imageUrl.replace("http://", "https://");
+    }
+
     this.image = new Image();
+    this.image.referrerPolicy = "no-referrer";
     this.image.crossOrigin = "anonymous";
-    this.image.src = imageUrl || "assets/placeholder.svg";
     this.image.onload = this.setupCanvasAndRedraw.bind(this);
     this.image.onerror = () => {
+      console.error("Meme Generator: Failed to load image from URL:", this.imageUrl);
+      // Fallback to placeholder if external image fails
       if (!this.image.src.includes("assets/placeholder.svg")) {
+        console.log("Meme Generator: Falling back to placeholder image");
         this.image.src = "assets/placeholder.svg";
       }
     };
+    this.image.src = this.imageUrl;
 
-    this.topText = "";
-    this.bottomText = "";
     this.textState = {
       top: { text: "", x: 0, y: 75 },
       bottom: { text: "", x: 0, y: 0 },
@@ -47,10 +65,15 @@ class MemeEditor {
     this.canvas.width = width;
     this.canvas.height = height;
 
-    this.textState.bottom.y = this.canvas.height - 50;
-    this.textState.bottom.x = this.canvas.width / 2;
+    // Reset default positions if they are 0 (e.g. first load)
+    if (this.textState.bottom.x === 0 && this.textState.bottom.y === 0) {
+      this.textState.bottom.y = this.canvas.height - 50;
+      this.textState.bottom.x = this.canvas.width / 2;
+    }
 
-    this.textState.top.x = this.canvas.width / 2;
+    if (this.textState.top.x === 0) {
+      this.textState.top.x = this.canvas.width / 2;
+    }
 
     this.redraw();
   }
@@ -78,6 +101,8 @@ class MemeEditor {
 
   applyText(textState) {
     const { x, y, text } = textState;
+    if (!text) return;
+    
     const lineHeight = this.ctx.measureText("M").width * 1.5;
 
     this.ctx.font = `${this.currentTextSize}px Impact`;
@@ -110,6 +135,8 @@ class MemeEditor {
     const textMargin = this.currentTextSize / 10;
 
     for (const [position, { x, y, text }] of Object.entries(this.textState)) {
+      if (!text) continue;
+
       this.ctx.font = `${this.currentTextSize}px Impact`;
       const textWidth = this.ctx.measureText(text).width;
       const lineHeight = this.ctx.measureText("M").width * 1.5;
@@ -174,6 +201,69 @@ class MemeEditor {
     this.saveToLocalStorage();
   }
 
+  exportProject() {
+    return {
+      version: "1.0",
+      imageUrl: this.imageUrl,
+      textState: this.textState,
+      currentTextSize: this.currentTextSize
+    };
+  }
+
+  importProject(projectData) {
+    if (projectData.imageUrl) {
+      this.imageUrl = projectData.imageUrl;
+      this.image.src = this.imageUrl;
+    }
+    if (projectData.textState) {
+      this.textState = projectData.textState;
+    }
+    if (projectData.currentTextSize) {
+      this.currentTextSize = projectData.currentTextSize;
+      const sizeInput = document.querySelector(".text-size");
+      if (sizeInput) sizeInput.value = this.currentTextSize;
+    }
+
+    const topTextInput = document.querySelector(".text-top");
+    const bottomTextInput = document.querySelector(".text-bottom");
+    if (topTextInput) topTextInput.value = this.textState.top.text;
+    if (bottomTextInput) bottomTextInput.value = this.textState.bottom.text;
+
+    this.redraw();
+  }
+
+  handleSaveProject() {
+    const projectData = this.exportProject();
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = "meme-project.json";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  handleImportProject() {
+    this.importProjectInput.click();
+  }
+
+  handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const projectData = JSON.parse(e.target.result);
+        this.importProject(projectData);
+      } catch (err) {
+        console.error("Error loading project:", err);
+        alert("Invalid file.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   saveToLocalStorage() {
     const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
 
@@ -183,27 +273,12 @@ class MemeEditor {
   }
 
   showRecentMemes() {
+    if (!this.recentMeme) return;
     const recentMemes = JSON.parse(localStorage.getItem("recentMemes")) || [];
     let html = "";
 
-    const escapeHTML = (str) => {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    };
-
     recentMemes.forEach((meme, index) => {
-      const safeMeme = escapeHTML(meme);
-      const galleryItem = `
-      <li class="gallery-item">
-        <img src="${safeMeme}" alt="Meme recente numero ${index + 1}" />
-        <a href="${safeMeme}" download="recent-meme-${index + 1}.png">Scarica</a>
-      </li>
-      `;
-      html += galleryItem;
+      html += renderRecentMeme(meme, index);
     });
 
     this.recentMeme.innerHTML = html;
@@ -213,8 +288,22 @@ class MemeEditor {
     this.canvas.addEventListener("pointerdown", this.handleMouseDown.bind(this));
     this.canvas.addEventListener("pointermove", this.handleMouseMove.bind(this));
     window.addEventListener("pointerup", this.handleMouseUp.bind(this));
-    this.controls.addEventListener("input", this.handleControlsChange.bind(this));
-    this.saveButton.addEventListener("click", this.handleSave.bind(this));
+    
+    if (this.controlsContainer) {
+      this.controlsContainer.addEventListener("input", this.handleControlsChange.bind(this));
+    }
+    if (this.saveButton) {
+      this.saveButton.addEventListener("click", this.handleSave.bind(this));
+    }
+    if (this.saveProjectButton) {
+      this.saveProjectButton.addEventListener("click", this.handleSaveProject.bind(this));
+    }
+    if (this.importProjectButton) {
+      this.importProjectButton.addEventListener("click", this.handleImportProject.bind(this));
+    }
+    if (this.importProjectInput) {
+      this.importProjectInput.addEventListener("change", this.handleFileImport.bind(this));
+    }
   }
 }
 

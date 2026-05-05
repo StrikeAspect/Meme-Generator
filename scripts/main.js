@@ -1,15 +1,5 @@
 import { memeApi } from './api.js';
-
-// 🛡️ Sentinel: Escape HTML to prevent XSS vulnerabilities
-function escapeHTML(str) {
-	if (str == null) return '';
-	return String(str)
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;');
-}
+import { renderGalleryItem } from './ui.js';
 
 (async () => {
 
@@ -22,35 +12,8 @@ function escapeHTML(str) {
 
 		let html = '';
 
-		const escapeHTML = (str) => {
-			return String(str)
-				.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&#39;');
-		};
-
 		memes.forEach(meme => {
-			const { id, name, title, url } = meme;
-			const displayName = escapeHTML(name || title || 'Meme');
-
-			const rawImageName = memeApi.getMemeNameFromUrl(url);
-			const imageName = escapeHTML(rawImageName);
-
-
-			const encodedUrl = encodeURIComponent(url);
-			const safeUrl = escapeHTML(url);
-			const galleryItem = `
-			<li class="gallery-item skeleton" data-src="${safeUrl}" data-imageName="${imageName}">
-				<div>
-					<p>${displayName}</p>
-					<a href="crea.html?imageUrl=${encodedUrl}&imageName=${encodeURIComponent(rawImageName)}">Usa template</a>
-				</div>
-			</li>
-			`;
-
-			html += galleryItem;
+			html += renderGalleryItem(meme, memeApi.getMemeNameFromUrl);
 		});
 
 		gallery.innerHTML = html;
@@ -62,7 +25,15 @@ function escapeHTML(str) {
 					const item = entry.target;
 
 					const img = document.createElement('img');
-					img.src = item.dataset.src;
+					let src = item.dataset.src;
+					
+					// Upgrade to https if necessary
+					if (src.startsWith('http://')) {
+						src = src.replace('http://', 'https://');
+					}
+					
+					img.referrerPolicy = "no-referrer";
+					img.src = src;
 					img.alt = item.querySelector('p').textContent;
 					img.classList.add('fade-in');
 					img.onload = () => {
@@ -70,6 +41,7 @@ function escapeHTML(str) {
 						item.insertBefore(img, item.firstChild);
 					};
 					img.onerror = () => {
+						console.error("Meme Generator: Failed to load gallery image:", src);
 						if (!img.src.includes('assets/placeholder.svg')) {
 							img.src = 'assets/placeholder.svg';
 						}
@@ -84,7 +56,7 @@ function escapeHTML(str) {
 		lazyLoadItems.forEach(item => observer.observe(item));
 
 	} else {
-		gallery.innerHTML = '<li class="gallery-empty">Non è stato possibile caricare i meme. Riprova più tardi.</li>';
+		gallery.innerHTML = '<li class="gallery-empty">Could not load memes. Please try again later.</li>';
 	}
 
 })();

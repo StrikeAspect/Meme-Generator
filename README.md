@@ -58,9 +58,11 @@ If the API is unavailable, the app gracefully falls back to local placeholder te
 ├── scripts/
 │   ├── api.js          # meme API loader and fallback handler
 │   ├── main.js         # gallery rendering + lazy loading logic
-│   └── canvas.js       # meme canvas editor, text rendering, download export
+│   ├── canvas.js       # meme canvas editor, text rendering, download export, and project persistence
+│   └── ui.js           # template-based UI rendering components
 ├── crea.html           # meme editor page
 ├── index.html          # template gallery landing page
+├── tests/              # unit tests for core logic and persistence
 └── README.md           # this project overview
 ```
 
@@ -72,13 +74,25 @@ If the API is unavailable, the app gracefully falls back to local placeholder te
 2. Pick a meme template from the gallery.
 3. Add top and bottom text in the editor.
 4. Adjust the text size slider to fit your message.
-5. Hit download and save the meme.
+5. Hit **"Download Meme"** to save your creation as an image.
+6. Use **"Save Project"** to export your work as a JSON file.
+7. Use **"Import Project"** to load a previously saved JSON file and resume editing.
 
-### Notes
+### Features
+
+* **Template Selection**: Choose from hundreds of meme templates.
+* **Text Editing**: Add top and bottom text with free dragging on the canvas.
+* **Persistence**:
+    * **Save Project**: Export current state (text, positions, image) as a JSON file.
+    * **Import Project**: Load a JSON file to restore the meme state perfectly.
+* **UI Templating**: Decoupled DOM logic using `scripts/ui.js` for cleaner rendering.
+
+### Technical Notes
 
 * `scripts/api.js` loads templates from `https://meme-api.com/gimme/15`
-* `scripts/main.js` builds the gallery and lazy-loads each image
-* `scripts/canvas.js` draws text on the selected meme and exports a PNG
+* `scripts/main.js` builds the gallery and lazy-loads each image using `ui.js`
+* `scripts/canvas.js` handles the canvas rendering and JSON export/import
+* `scripts/ui.js` contains the HTML templates for gallery items and controls
 * The app works as a static frontend and is best served locally or via a simple static server
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
