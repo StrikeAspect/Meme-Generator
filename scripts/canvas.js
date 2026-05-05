@@ -25,16 +25,36 @@ class MemeEditor {
 
     this.image = new Image();
     this.image.referrerPolicy = "no-referrer";
-    this.image.crossOrigin = "anonymous";
+    
+    // Attempt with anonymous crossOrigin to allow downloading
+    // But provide a fallback if the server doesn't support CORS
+    if (this.imageUrl.startsWith('http') || this.imageUrl.startsWith('//')) {
+      this.image.crossOrigin = "anonymous";
+    }
+
     this.image.onload = this.setupCanvasAndRedraw.bind(this);
+    
     this.image.onerror = () => {
-      console.error("Meme Generator: Failed to load image from URL:", this.imageUrl);
-      // Fallback to placeholder if external image fails
+      // Fallback 1: If CORS failed, try loading without it
+      if (this.image.crossOrigin === "anonymous") {
+        console.warn("Meme Generator: CORS blocked the image. Retrying without CORS (Download might not work)...");
+        this.image.crossOrigin = null;
+        // Add a small delay and a cache-buster to force a fresh non-CORS request
+        const cacheBuster = `t=${Date.now()}`;
+        const separator = this.imageUrl.includes('?') ? '&' : '?';
+        this.image.src = `${this.imageUrl}${separator}${cacheBuster}`;
+        return;
+      }
+
+      // Fallback 2: If everything fails, show the local placeholder
+      console.error("Meme Generator: Permanent failure loading image:", this.imageUrl);
       if (!this.image.src.includes("assets/placeholder.svg")) {
-        console.log("Meme Generator: Falling back to placeholder image");
+        console.log("Meme Generator: Showing placeholder asset instead");
         this.image.src = "assets/placeholder.svg";
       }
     };
+
+    // Initial load attempt
     this.image.src = this.imageUrl;
 
     this.textState = {
