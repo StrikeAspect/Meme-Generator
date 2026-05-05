@@ -1,5 +1,16 @@
 import { memeApi } from './api.js';
 
+// 🛡️ Sentinel: Escape HTML to prevent XSS vulnerabilities
+function escapeHTML(str) {
+	if (str == null) return '';
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 (async () => {
 
 	await memeApi.init();
@@ -27,9 +38,9 @@ import { memeApi } from './api.js';
 			const rawImageName = memeApi.getMemeNameFromUrl(url);
 			const imageName = escapeHTML(rawImageName);
 
+
 			const encodedUrl = encodeURIComponent(url);
 			const safeUrl = escapeHTML(url);
-
 			const galleryItem = `
 			<li class="gallery-item skeleton" data-src="${safeUrl}" data-imageName="${imageName}">
 				<div>
