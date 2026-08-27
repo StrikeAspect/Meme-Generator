@@ -89,6 +89,51 @@ export function renderEditorControls() {
     `;
 }
 
+/**
+ * Intersection Observer callback for lazy loading gallery images
+ * @param {IntersectionObserverEntry[]} entries
+ * @param {IntersectionObserver} observer
+ */
+export function handleGalleryIntersection(entries, observer) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const item = entry.target;
+
+            const img = document.createElement('img');
+            let src = item.dataset.src;
+
+            // Upgrade to https if necessary
+            if (src && src.startsWith('http://')) {
+                src = src.replace('http://', 'https://');
+            }
+
+            img.referrerPolicy = "no-referrer";
+            img.src = src;
+            img.alt = item.querySelector('p').textContent;
+            img.classList.add('fade-in');
+            img.onload = () => {
+                item.classList.remove('skeleton');
+                item.insertBefore(img, item.firstChild);
+            };
+            img.onerror = () => {
+                console.error("Meme Generator: Failed to load gallery image:", src);
+                if (!img.src.includes('assets/placeholder.svg')) {
+                    img.src = 'assets/placeholder.svg';
+                }
+                item.classList.remove('skeleton');
+                item.insertBefore(img, item.firstChild);
+            };
+            observer.unobserve(item);
+        }
+    });
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { escapeHTML, renderGalleryItem, renderRecentMeme, renderEditorControls };
+  module.exports = {
+    escapeHTML,
+    renderGalleryItem,
+    renderRecentMeme,
+    renderEditorControls,
+    handleGalleryIntersection
+  };
 }
